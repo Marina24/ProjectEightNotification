@@ -3,11 +3,26 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_horizontal_margin"
     tools:context=".ui.MainActivity">
+
+    <TextView
+        android:id="@+id/txt_data_last_downloader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
     <Button
         android:id="@+id/btn_download"
         style="@style/Button"
-        android:layout_centerInParent="true"
+        android:layout_below="@id/txt_data_last_downloader"
         android:text="@string/download" />
+
+    <Button
+        android:id="@+id/btn_up_date"
+        style="@style/Button"
+        android:layout_below="@id/txt_data_last_downloader"
+        android:layout_toRightOf="@id/btn_download"
+        android:text="@string/update" />
+
 </RelativeLayout>

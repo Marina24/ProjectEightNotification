@@ -1,6 +1,8 @@
 package com.example.user.projecteightnotification;
 
 
+import android.net.ConnectivityManager;
+
 public class Const {
 
     //reference uri

@@ -32,11 +32,6 @@
             </intent-filter>
         </receiver>
 
-        <activity
-            android:name=".ui.ResultActivity"
-            android:label="@string/aap_name_update">
-
-        </activity>
     </application>
 
 </manifest>
