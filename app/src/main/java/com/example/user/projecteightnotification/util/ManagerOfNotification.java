@@ -25,17 +25,15 @@ import com.example.user.projecteightnotification.ui.MainActivity;
 public class ManagerOfNotification {
     // Notification identifier
     public static final int NOTIFY_ID = 1;
-    private static NotificationManager mNotifyManager;
-    private static NotificationCompat.Builder mBuilder;
-    private static Uri mRingURI = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
 
     public static void createNotification(Context context, Intent intent) {
         // Get download link
         final String uri = intent.getStringExtra(DownloadService.EXTRA_IMAGE_URI);
+        Uri ringURI = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         // Create notification
-        mNotifyManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        mBuilder = new NotificationCompat.Builder(context);
+        NotificationManager notifyManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
         RemoteViews contentView = new RemoteViews(context.getPackageName(), R.layout.custom_notification);
         int textColor = ContextCompat.getColor(context, R.color.textColor);
         contentView.setTextColor(R.id.txt_notif_title, textColor);
@@ -44,31 +42,37 @@ public class ManagerOfNotification {
         final String action = intent.getAction();
         switch (action) {
             case DownloadService.ACTION_START_DOWNLOAD:
-                fillNotification(context, R.drawable.ic_file_download, new Intent(context, MainActivity.class),
-                        new Intent(context, DownloadService.class), R.drawable.ic_downloader, "Download",
-                        View.GONE, View.VISIBLE, contentView);
-                progressDownload(context, contentView, mBuilder.build(), "Downloading...",
-                        uri, "Download complete", View.GONE, View.GONE, View.GONE);
+
+                fillNotification(context, notifyManager, builder, R.drawable.ic_file_download,
+                        new Intent(context, MainActivity.class), new Intent(context, DownloadService.class),
+                        R.drawable.ic_downloader, "Download", View.GONE, View.VISIBLE, contentView);
+
+                progressDownload(context, notifyManager, builder, contentView, builder.build(), ringURI,
+                        "Downloading...", uri, "Download complete", View.GONE, View.GONE, View.GONE);
                 break;
             case DownloadService.ACTION_CALLER:
-                fillNotification(context, R.drawable.ic_new_releases, new Intent(context, MainActivity.class),
-                        new Intent(context, DownloadService.class), R.drawable.ic_update, "Update file is available!",
-                        View.VISIBLE, View.GONE, contentView);
+
+                fillNotification(context, notifyManager, builder, R.drawable.ic_new_releases,
+                        new Intent(context, MainActivity.class), new Intent(context, DownloadService.class),
+                        R.drawable.ic_update, "Update file is available!", View.VISIBLE, View.GONE, contentView);
                 break;
             case DownloadService.ACTION_UPDATE:
-                fillNotification(context, R.drawable.ic_new_releases, new Intent(context, MainActivity.class),
-                        new Intent(context, DownloadService.class), R.drawable.ic_update, "Update file is available!",
-                        View.GONE, View.VISIBLE, contentView);
-                progressDownload(context, contentView, mBuilder.build(), "Updating...",
+
+                fillNotification(context, notifyManager, builder, R.drawable.ic_new_releases,
+                        new Intent(context, MainActivity.class), new Intent(context, DownloadService.class),
+                        R.drawable.ic_update, "Update file is available!", View.GONE, View.VISIBLE, contentView);
+
+                progressDownload(context, notifyManager, builder, contentView, builder.build(), ringURI, "Updating...",
                         uri, "Updating complete", View.VISIBLE, View.GONE, View.GONE);
                 break;
         }
     }
 
-    public static void fillNotification(Context context, int smallIcon, Intent intentActivity, Intent intentService,
+    public static void fillNotification(Context context, NotificationManager notifyManager, NotificationCompat.Builder builder,
+                                        int smallIcon, Intent intentActivity, Intent intentService,
                                         int imageView, String content, int visibilityUpdateButton,
                                         int visibilityProgressBar, RemoteViews contentView) {
-        mBuilder.setSmallIcon(smallIcon);
+        builder.setSmallIcon(smallIcon);
         // Clicking on notification open result activity
         PendingIntent pendingintent = PendingIntent.getActivity(context, 1, intentActivity, PendingIntent.FLAG_CANCEL_CURRENT);
         // Clicking on button in notification reloading file
@@ -84,15 +88,16 @@ public class ManagerOfNotification {
         contentView.setOnClickPendingIntent(R.id.img_update, pendingUpDate);
         contentView.setOnClickPendingIntent(R.id.layout_custom_notification, pendingintent);
 
-        mBuilder.setContent(contentView);
-        Notification notification = mBuilder.build();
+        builder.setContent(contentView);
+        Notification notification = builder.build();
         notification.contentIntent = pendingintent;
         notification.contentView = contentView;
-        mNotifyManager.notify(NOTIFY_ID, notification);
+        notifyManager.notify(NOTIFY_ID, notification);
     }
 
 
-    public static void progressDownload(Context context, RemoteViews contentView, Notification notification,
+    public static void progressDownload(Context context, NotificationManager notifyManager, NotificationCompat.Builder builder,
+                                        RemoteViews contentView, Notification notification, Uri ringURI,
                                         String title, String uri, String result, int visibilityImageUpDate,
                                         int visibilityUpdateButton, int visibilityProgressBar) {
         notification.contentIntent = PendingIntent.getActivity(context, 0, new Intent(context, MainActivity.class), 0);
@@ -101,9 +106,9 @@ public class ManagerOfNotification {
             contentView.setTextViewText(R.id.txt_notif_title, title);
             contentView.setProgressBar(R.id.progress_bar, 100, Math.min(j, 100), false);
             contentView.setTextViewText(R.id.txt_update_notif, Math.min(j, 100) + "% ");
-            mBuilder.setContent(contentView);
+            builder.setContent(contentView);
             notification.contentView = contentView;
-            mNotifyManager.notify(NOTIFY_ID, notification);
+            notifyManager.notify(NOTIFY_ID, notification);
             DownloadService.downloadData(uri);
             try {
                 // Sleep for a while
@@ -118,12 +123,12 @@ public class ManagerOfNotification {
         contentView.setViewVisibility(R.id.img_update, visibilityImageUpDate);
         contentView.setViewVisibility(R.id.progress_bar, visibilityUpdateButton);
         contentView.setViewVisibility(R.id.txt_update_notif, visibilityProgressBar);
-        mBuilder.setContent(contentView).setSmallIcon(R.drawable.ic_done).setSound(mRingURI).setAutoCancel(true);
+        builder.setContent(contentView).setSmallIcon(R.drawable.ic_done).setSound(ringURI).setAutoCancel(true);
 
-        notification = mBuilder.build();
+        notification = builder.build();
         notification.contentView = contentView;
         notification.contentIntent = PendingIntent.getActivity(context, 0, new Intent(context, MainActivity.class), 0);
-        mNotifyManager.notify(NOTIFY_ID, notification);
+        notifyManager.notify(NOTIFY_ID, notification);
 
         SharedPreference.setTimeOfLatDownload(context);
     }
